@@ -3,7 +3,7 @@ $(document).ready(function () {
     updateTime();
     bgmove();
     fSunsetSunrise();
-	sunGradient()
+    bgGradient()
 });
 
 const cacheKey = 'sunsetSunriseCache';
@@ -41,38 +41,52 @@ function fSunsetSunrise() {
 }
 
 
+function dayPercents() {
+    // Fetch sunset and sunrise values from the cache
+    const sunCache = JSON.parse(localStorage.getItem(cacheKey));
 
+    if (!sunCache || !sunCache.values || !sunCache.values.results) {
+        console.error('Error: Sunset and sunrise data not available in the cache.');
+        return;
+    }
 
+    const sunData = sunCache.values.results;
 
-function bgGradient() {
-	
-const sunCache = JSON.parse(localStorage.getItem('sunsetSunriseCache'));
-sunData = sunCache.values.results;
+    // Extract values and calculate percentages
+    const sunArray = [
+        sunData.civil_twilight_begin,
+        sunData.sunrise,
+        sunData.solar_noon,
+        sunData.sunset,
+        sunData.civil_twilight_end,
+    ];
 
-	
-	    const extractedValues = [sunrise,sunset,solar_noon,civil_twilight_begin,civil_twilight_end];
-	
+    // Define the total duration of the day in minutes (adjust as needed)
+    const totalDayDurationMinutes = 24 * 60;
 
+    // Calculate the percentages for each value
+    const percentagesArray = sunArray.map(value => {
+        const time = new Date(value);
+        const minutesSinceMidnight = time.getHours() * 60 + time.getMinutes();
+        return parseFloat((minutesSinceMidnight / totalDayDurationMinutes) * 100).toFixed(1);
+    });
 
-	
-	var sunrises = new Date(sunData.sunrise);
-	
-
-	console.log(sunrises);
-
-
-
-
-
-
-
-	
+    console.log('Percentages Array:', percentagesArray);
 }
 
 
 
 
+function bgGradient(){
+	
+	
+	
+	
+	
 
+dayPercents();
+	
+}
 
 
 
@@ -88,8 +102,7 @@ function fetchSunriseSunset() {
             var sunset = new Date(response.results.sunset);
             var twilightStart = new Date(response.results.civil_twilight_begin);
             var twilightEnd = new Date(response.results.civil_twilight_end);
-			
-			
+
             var totalDuration = 86400; // Total duration of a day in seconds
             var startOfDay = new Date(sunrise.getFullYear(), sunrise.getMonth(), sunrise.getDate()).getTime();
             var sunrisePercentage = Math.round(((sunrise - startOfDay) / totalDuration)) / 10;
@@ -113,8 +126,6 @@ function fetchSunriseSunset() {
     });
     setTimeout(fetchSunriseSunset, 6 * 60 * 60 * 1000); // 6 hours in milliseconds
 }
-
-
 
 function updateTime() {
 
