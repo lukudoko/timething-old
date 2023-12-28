@@ -71,7 +71,7 @@ function dayPercents() {
         return parseFloat((minutesSinceMidnight / totalDayDurationMinutes) * 100).toFixed(1);
     });
 
-    console.log('Percentages Array:', percentagesArray);
+    return percentagesArray;
 }
 
 
@@ -80,11 +80,47 @@ function dayPercents() {
 function bgGradient(){
 	
 	
-	
-	
+const percentages = dayPercents();
+const colours = ['#0E0430', '#f1aa7f', '#88e3ff', '#FFA8A9', '#0E0430']
+
 	
 
-dayPercents();
+function combineArrays(colors, percentages) {
+
+    return colors.map((color, index) => ({
+        color: color,
+        percentage: percentages[index],
+    }));
+}
+
+
+const combinedArray = combineArrays(colours, percentages);
+
+function generateGradientString(combinedArray) {
+    if (!combinedArray || !combinedArray.length) {
+        console.error('Error: Empty or invalid combined array.');
+        return null; // Return null or any appropriate value indicating an error
+    }
+
+    const gradientStops = combinedArray.map(item => `${item.color} ${item.percentage}%`);
+
+    return `linear-gradient(to bottom, ${gradientStops.join(', ')})`;
+}
+
+
+const gradientString = generateGradientString(combinedArray);
+
+            $('#background').css('background', gradientString);
+
+console.log('Gradient String:', gradientString);
+
+
+
+
+
+
+            //var gradientCSS = `linear-gradient(to bottom, ${tstartColor} ${tstartPercentage - 3}%,  ${sunriseColor} ${sunrisePercentage}%, ${noonColor} ${solarNoonPercentage}%, ${noonColor} ${solarNoonPercentage + 15}%,${sunsetColor} ${sunsetPercentage}%, ${tendColor} ${tendPercentage + 2}%)`;
+            //$('#background').css('background', gradientCSS);
 	
 }
 
@@ -110,15 +146,21 @@ function fetchSunriseSunset() {
             var sunsetPercentage = Math.round(((sunset - startOfDay) / totalDuration)) / 10;
             var tstartPercentage = Math.round(((twilightStart - startOfDay) / totalDuration)) / 10;
             var tendPercentage = Math.round(((twilightEnd - startOfDay) / totalDuration)) / 10;
-            var tstartColor = '#0E0430';
+           
+
+
+
+   		   var tstartColor = '#0E0430';
             var sunriseColor = '#f1aa7f'; // Replace with your desired color for sunrise
             var noonColor = '#88e3ff'; // Replace with your desired color for solar noon
             var sunsetColor = '#FFA8A9'; // Replace with your desired color for sunset
             var tendColor = '#0E0430';
             var gradientCSS = `linear-gradient(to bottom, ${tstartColor} ${tstartPercentage - 3}%,  ${sunriseColor} ${sunrisePercentage}%, ${noonColor} ${solarNoonPercentage}%, ${noonColor} ${solarNoonPercentage + 15}%,${sunsetColor} ${sunsetPercentage}%, ${tendColor} ${tendPercentage + 2}%)`;
-            $('#background').css('background', gradientCSS);
+            //$('#background').css('background', gradientCSS);
+			
+			var gradienstCSS = `linear-gradient(to bottom, ${tstartColor} ${tstartPercentage - 3}%,  ${sunriseColor} ${sunrisePercentage}%, ${noonColor} ${solarNoonPercentage}%, ${noonColor} ${solarNoonPercentage + 15}%,${sunsetColor} ${sunsetPercentage}%, ${tendColor} ${tendPercentage + 2}%)`;
 
-            console.log(gradientCSS);
+            //console.log(gradienstCSS);
         },
         error: function () {
             console.log('Error fetching sunrise/sunset data.');

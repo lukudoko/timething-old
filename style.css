@@ -44,3 +44,11 @@
 		background-color: white;
 		opacity: .5;
 	  }
+	  
+	  #testbg{
+		  height: 80vh;
+  position: absolute;
+  width: 30vh;
+  border: black;
+  border-style: solid;
+	  }
