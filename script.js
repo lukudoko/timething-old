@@ -114,25 +114,28 @@ function bgGradient() {
 }
 
 function updateTime() {
-
     var now = new Date();
-    var hours = now.getHours();
-    var hours12 = now.getHours() % 12 || 12;
+    var hours = now.getHours() % 12 || 12;
     var minutes = now.getMinutes();
-    //var seconds = now.getSeconds();
     var ampm = hours >= 12 ? 'pm' : 'am';
-    var timeString = hours12.toString().padStart(1, '0') + ':' +
-        minutes.toString().padStart(2, '0');
+
+    // Use template literals for cleaner string concatenation
+    var timeString = `${hours.toString().padStart(1, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+    // Combine updating elements in one place
     $('#clock').html(timeString);
     $('#ampm').html(ampm);
-
 }
+
+
 
 function bgmove() {
     var now = new Date();
     var totalMinutes = now.getHours() * 60 + now.getMinutes();
     var totalMinutesInDay = 24 * 60;
     var percentage = (totalMinutes / totalMinutesInDay);
+	console.log(percentage);
+	
     // Cache DOM elements
     var background = $('#background');
     var percElement = $('#perc');
@@ -141,8 +144,10 @@ function bgmove() {
     var backgroundHeight = background.height();
     var viewport = window.innerHeight;
     var targetPosition =  - ((backgroundHeight * percentage) - viewport / 2)
-        // Update the width of the percentage element
-        percElement.css('width', percentage * 100 + '%');
+	
+
+    // Update the width of the percentage element
+    percElement.css('width', percentage * 100 + '%');
 
     // Store the latest targetPosition in localStorage
     localStorage.setItem('latestBGPosition', targetPosition);
@@ -150,9 +155,17 @@ function bgmove() {
     // Apply the background position with a smooth transition
     background.css({
         'background-position-y': targetPosition + 'px',
-        'transition': 'background-position-y 1s ease-in-out'
     });
-    console.log(targetPosition);
+	
+	// Check if percentage is close to 1 or close to 0
+    var isCloseToOne = percentage >= 0.9986;
+    var isCloseToZero = percentage <= 0.0014;
+
+    if (isCloseToOne || isCloseToZero) {
+        background.css('transition', 'none');
+    } else {
+		background.css('transition', 'background-position-y 1s ease-in-out');
+	}
 }
 
 setInterval(updateTime, 1000);
