@@ -1,16 +1,22 @@
 $(document).ready(function () {
     fetchSunriseSunset();
     updateTime();
-    bgmove();
-    fSunsetSunrise();
     bgGradient()
+
+    var initialBGposition = localStorage.getItem('latestBGPosition');
+
+    if (initialBGposition !== null) {
+        $('#background').css('background-position-y', initialBGposition + 'px');
+    }
+
+    bgmove();
 });
 
 const cacheKey = 'sunsetSunriseCache';
 const cacheExpiry = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
 
-function fSunsetSunrise() {
+function fetchSunriseSunset() {
     // Check if cached data is available
     const cachedData = JSON.parse(localStorage.getItem(cacheKey));
 
@@ -40,7 +46,6 @@ function fSunsetSunrise() {
 
 }
 
-
 function dayPercents() {
     // Fetch sunset and sunrise values from the cache
     const sunCache = JSON.parse(localStorage.getItem(cacheKey));
@@ -68,105 +73,44 @@ function dayPercents() {
     const percentagesArray = sunArray.map(value => {
         const time = new Date(value);
         const minutesSinceMidnight = time.getHours() * 60 + time.getMinutes();
-        return parseFloat((minutesSinceMidnight / totalDayDurationMinutes) * 100).toFixed(1);
+        return parseFloat(((minutesSinceMidnight / totalDayDurationMinutes) * 100).toFixed(1));
     });
 
     return percentagesArray;
 }
 
+function bgGradient() {
 
+    const percentages = dayPercents();
+    percentages[0] = parseFloat((percentages[0] - 3).toFixed(1));
+    percentages[4] += 3;
 
+    percentages.push(percentages[2] + 5);
+    percentages.sort(function (a, b) {
+        return a - b
+    });
 
-function bgGradient(){
-	
-	
-const percentages = dayPercents();
-const colours = ['#0E0430', '#f1aa7f', '#88e3ff', '#FFA8A9', '#0E0430']
+    const colours = ['#0E0430', '#f1aa7f', '#88e3ff', '#88e3ff', '#FFA8A9', '#0E0430']
 
-	
+    function combineArrays(colors, percentages) {
 
-function combineArrays(colors, percentages) {
-
-    return colors.map((color, index) => ({
-        color: color,
-        percentage: percentages[index],
-    }));
-}
-
-
-const combinedArray = combineArrays(colours, percentages);
-
-function generateGradientString(combinedArray) {
-    if (!combinedArray || !combinedArray.length) {
-        console.error('Error: Empty or invalid combined array.');
-        return null; // Return null or any appropriate value indicating an error
+        return colors.map((color, index) => ({
+                color: color,
+                percentage: percentages[index],
+            }));
     }
 
-    const gradientStops = combinedArray.map(item => `${item.color} ${item.percentage}%`);
+    const combinedArray = combineArrays(colours, percentages);
 
-    return `linear-gradient(to bottom, ${gradientStops.join(', ')})`;
-}
+    function generateGradientString(combinedArray) {
+        const gradientStops = combinedArray.map(item => `${item.color} ${item.percentage}%`);
 
+        return `linear-gradient(to bottom, ${gradientStops.join(', ')})`;
+    }
 
-const gradientString = generateGradientString(combinedArray);
+    const gradientString = generateGradientString(combinedArray);
 
-            $('#background').css('background', gradientString);
-
-console.log('Gradient String:', gradientString);
-
-
-
-
-
-
-            //var gradientCSS = `linear-gradient(to bottom, ${tstartColor} ${tstartPercentage - 3}%,  ${sunriseColor} ${sunrisePercentage}%, ${noonColor} ${solarNoonPercentage}%, ${noonColor} ${solarNoonPercentage + 15}%,${sunsetColor} ${sunsetPercentage}%, ${tendColor} ${tendPercentage + 2}%)`;
-            //$('#background').css('background', gradientCSS);
-	
-}
-
-
-
-
-function fetchSunriseSunset() {
-    var url = 'https://api.sunrise-sunset.org/json?lat=57.6529&lng=11.9106&formatted=0';
-    $.ajax({
-        url: url,
-        method: 'GET',
-        success: function (response) {
-            var sunrise = new Date(response.results.sunrise);
-            var solarNoon = new Date(response.results.solar_noon);
-            var sunset = new Date(response.results.sunset);
-            var twilightStart = new Date(response.results.civil_twilight_begin);
-            var twilightEnd = new Date(response.results.civil_twilight_end);
-
-            var totalDuration = 86400; // Total duration of a day in seconds
-            var startOfDay = new Date(sunrise.getFullYear(), sunrise.getMonth(), sunrise.getDate()).getTime();
-            var sunrisePercentage = Math.round(((sunrise - startOfDay) / totalDuration)) / 10;
-            var solarNoonPercentage = Math.round(((solarNoon - startOfDay) / totalDuration)) / 10;
-            var sunsetPercentage = Math.round(((sunset - startOfDay) / totalDuration)) / 10;
-            var tstartPercentage = Math.round(((twilightStart - startOfDay) / totalDuration)) / 10;
-            var tendPercentage = Math.round(((twilightEnd - startOfDay) / totalDuration)) / 10;
-           
-
-
-
-   		   var tstartColor = '#0E0430';
-            var sunriseColor = '#f1aa7f'; // Replace with your desired color for sunrise
-            var noonColor = '#88e3ff'; // Replace with your desired color for solar noon
-            var sunsetColor = '#FFA8A9'; // Replace with your desired color for sunset
-            var tendColor = '#0E0430';
-            var gradientCSS = `linear-gradient(to bottom, ${tstartColor} ${tstartPercentage - 3}%,  ${sunriseColor} ${sunrisePercentage}%, ${noonColor} ${solarNoonPercentage}%, ${noonColor} ${solarNoonPercentage + 15}%,${sunsetColor} ${sunsetPercentage}%, ${tendColor} ${tendPercentage + 2}%)`;
-            //$('#background').css('background', gradientCSS);
-			
-			var gradienstCSS = `linear-gradient(to bottom, ${tstartColor} ${tstartPercentage - 3}%,  ${sunriseColor} ${sunrisePercentage}%, ${noonColor} ${solarNoonPercentage}%, ${noonColor} ${solarNoonPercentage + 15}%,${sunsetColor} ${sunsetPercentage}%, ${tendColor} ${tendPercentage + 2}%)`;
-
-            //console.log(gradienstCSS);
-        },
-        error: function () {
-            console.log('Error fetching sunrise/sunset data.');
-        }
-    });
-    setTimeout(fetchSunriseSunset, 6 * 60 * 60 * 1000); // 6 hours in milliseconds
+    $('#background').css('background', gradientString);
 }
 
 function updateTime() {
@@ -179,8 +123,6 @@ function updateTime() {
     var ampm = hours >= 12 ? 'pm' : 'am';
     var timeString = hours12.toString().padStart(1, '0') + ':' +
         minutes.toString().padStart(2, '0');
-    //				   + ':' +
-    //			   seconds.toString().padStart(2, '0');
     $('#clock').html(timeString);
     $('#ampm').html(ampm);
 
@@ -191,16 +133,26 @@ function bgmove() {
     var totalMinutes = now.getHours() * 60 + now.getMinutes();
     var totalMinutesInDay = 24 * 60;
     var percentage = (totalMinutes / totalMinutesInDay);
+    // Cache DOM elements
     var background = $('#background');
+    var percElement = $('#perc');
+
+    // Cache values for better performance
     var backgroundHeight = background.height();
     var viewport = window.innerHeight;
-    var targetPosition =  - (backgroundHeight * percentage) + viewport / 2;
-    console.log(targetPosition)
-    $('#perc').css('width', percentage * 100 + '%');
+    var targetPosition =  - ((backgroundHeight * percentage) - viewport / 2)
+        // Update the width of the percentage element
+        percElement.css('width', percentage * 100 + '%');
+
+    // Store the latest targetPosition in localStorage
+    localStorage.setItem('latestBGPosition', targetPosition);
+
+    // Apply the background position with a smooth transition
     background.css({
         'background-position-y': targetPosition + 'px',
         'transition': 'background-position-y 1s ease-in-out'
     });
+    console.log(targetPosition);
 }
 
 setInterval(updateTime, 1000);
