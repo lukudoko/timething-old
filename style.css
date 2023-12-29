@@ -38,8 +38,8 @@
 		position: absolute;
 		bottom: 0;
 		left: 0;
-		height: 2vw;
-		transition: height 1s, background-color 2s ease-in-out;
+		height: 2vh;
+		transition: width 1s, background-color 2s ease-in-out;
 		z-index: -15;
 		background-color: white;
 		opacity: .5;
