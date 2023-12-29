@@ -1,15 +1,20 @@
 $(document).ready(function () {
-    fetchSunriseSunset();
-    updateTime();
-    bgGradient()
+    fetchSunriseSunset()
+    .then(function () {
+        bgGradient();
+        updateTime();
 
-    var initialBGposition = localStorage.getItem('latestBGPosition');
+        var initialBGposition = localStorage.getItem('latestBGPosition');
 
-    if (initialBGposition !== null) {
-        $('#background').css('background-position-y', initialBGposition + 'px');
-    }
+        if (initialBGposition !== null) {
+            $('#background').css('background-position-y', initialBGposition + 'px');
+        }
 
-    bgmove();
+        bgmove();
+    })
+    .catch(function (error) {
+        console.error('Error fetching sunrise/sunset data:', error);
+    });
 });
 
 const cacheKey = 'sunsetSunriseCache';
@@ -52,6 +57,7 @@ function dayPercents() {
 
     if (!sunCache || !sunCache.values || !sunCache.values.results) {
         console.error('Error: Sunset and sunrise data not available in the cache.');
+
         return;
     }
 
@@ -127,15 +133,12 @@ function updateTime() {
     $('#ampm').html(ampm);
 }
 
-
-
 function bgmove() {
     var now = new Date();
     var totalMinutes = now.getHours() * 60 + now.getMinutes();
     var totalMinutesInDay = 24 * 60;
     var percentage = (totalMinutes / totalMinutesInDay);
-	console.log(percentage);
-	
+
     // Cache DOM elements
     var background = $('#background');
     var percElement = $('#perc');
@@ -144,10 +147,9 @@ function bgmove() {
     var backgroundHeight = background.height();
     var viewport = window.innerHeight;
     var targetPosition =  - ((backgroundHeight * percentage) - viewport / 2)
-	
 
-    // Update the width of the percentage element
-    percElement.css('width', percentage * 100 + '%');
+        // Update the width of the percentage element
+        percElement.css('width', percentage * 100 + '%');
 
     // Store the latest targetPosition in localStorage
     localStorage.setItem('latestBGPosition', targetPosition);
@@ -156,16 +158,16 @@ function bgmove() {
     background.css({
         'background-position-y': targetPosition + 'px',
     });
-	
-	// Check if percentage is close to 1 or close to 0
+
+    // Check if percentage is close to 1 or close to 0
     var isCloseToOne = percentage >= 0.9986;
     var isCloseToZero = percentage <= 0.0014;
 
     if (isCloseToOne || isCloseToZero) {
         background.css('transition', 'none');
     } else {
-		background.css('transition', 'background-position-y 1s ease-in-out');
-	}
+        background.css('transition', 'background-position-y 1s ease-in-out');
+    }
 }
 
 setInterval(updateTime, 1000);
