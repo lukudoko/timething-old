@@ -122,8 +122,10 @@ function bgGradient() {
 function updateTime() {
     var now = new Date();
     var hours = now.getHours() % 12 || 12;
+	var hours24 = now.getHours();
+	console.log(hours);
     var minutes = now.getMinutes();
-    var ampm = hours >= 12 ? 'pm' : 'am';
+    var ampm = hours24 >= 12 ? 'pm' : 'am';
 
     // Use template literals for cleaner string concatenation
     var timeString = `${hours.toString().padStart(1, '0')}:${minutes.toString().padStart(2, '0')}`;
