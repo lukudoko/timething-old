@@ -4,12 +4,19 @@
         margin: 0;
         font-family: 'Lato', sans-serif;
       }
+	  
+#main{
+height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 
       #container {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
         color: white;
         text-shadow: 3px 4px #00000042;
       }
@@ -45,3 +52,21 @@
 		opacity: .5;
 	  }
 	  
+	  #appShelf {
+display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  width: 50vw;
+  background-color: #f0f0f0;
+  height: 8vh;
+  margin: 0 auto 0 auto;
+}
+
+.widget {
+    width: 200px;
+    height: 150px;
+    margin-right: 10px;
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
