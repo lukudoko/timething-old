@@ -15,7 +15,7 @@ function fetchTemperature() {
     }
 
     // Fetch new Temp
-    return fetch('https://api.openweathermap.org/data/2.5/weather?lat=57.65&lon=11.916&appid=7be8a9d34955926d889f6ce6d3ea87fb&units=metric')
+    return fetch('https://api.openweathermap.org/data/2.5/weather?lat=57.65&lon=11.916&appid=&units=metric')
     .then(response => response.json())
     .then(data => {
         // Cache the new values
