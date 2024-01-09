@@ -41,47 +41,16 @@ function fetchTemperature() {
 fetchTemperature()
 
 
-
-
-
-
-
-
-
-function fetchWeatherData() {
-
-    // Fetch sunset and sunrise values from the cache
-    const tempCache = JSON.parse(localStorage.getItem(cacheTemp));
-
-    if (!tempCache || !tempCache.values || !tempCache.values.main) {
-        console.error('Error: No weather data in cache');
-
-        return;
-    }
-
-    const tempData = tempCache.values;
-
-    return {
-        temperature: Math.trunc(tempData.main.temp) + '°C',
-        icon: tempData.weather[0].icon,
-    };
-}
-
-
-
-
-
-
-
 // Function to create a weather widget
-function createWeatherWidget(data) {
+function WeatherWidget(temp, url) {
+    // Create a weather widget using the fetched data
     const widget = document.createElement('div');
     widget.classList.add('widget');
     widget.id = "weather";
     widget.innerHTML = `
-		 <img src="https://openweathermap.org/img/wn/${data.icon}@2x.png"> 
-		 ${data.temperature}
-    `;
+        <img src="https://openweathermap.org/img/wn/${url}@2x.png"> 
+        ${Math.trunc(temp)}°C`;
+
     return widget;
 }
 
@@ -89,81 +58,206 @@ function createWeatherWidget(data) {
 
 
 
-function WidgetUpdateAnimation(widget, newData) {
-    // Trigger fade-out animation by reducing opacity
-    weatherWidget.style.opacity = 0;
 
-    // Function to handle the completion of fade-out animation
-    const handleFadeOutComplete = () => {
-        // Remove the event listener to avoid multiple calls
-        weatherWidget.removeEventListener('transitionend', handleFadeOutComplete);
+function fadeIn(wid) {
+    const appShelf = document.getElementById('appShelf');
+    const oldestWidget = appShelf.firstElementChild;
 
-        // Update the widget content
-        updateWeatherWidget(widget, newData);
+    if (appShelf.childElementCount >= 4) {
 
-        // Trigger fade-in animation by increasing opacity
-        weatherWidget.style.opacity = 1;
-    };
+        appShelf.appendChild(wid);
 
-    // Add an event listener for the transitionend event
-    weatherWidget.addEventListener('transitionend', handleFadeOutComplete);
-}
+        const widgets = document.querySelectorAll('.widget');
+
+        gsap.set(widgets, {
+            x: '0%',
+            opacity: 0
+        });
+
+        gsap.to(widgets, {
+            x: '-100%',
+            opacity: 1,
+            duration: 0.5,
+            ease: 'power2.inOut',
+            stagger: 0.1, // Optional: Adds a stagger effect for a smoother appearance
+            onComplete: () => {
+                appShelf.removeChild(oldestWidget);
+                gsap.set(widgets, {
+                    x: '0%'
+                });
+            }
+        });
+    } else {
 
 
-// Function to update the weather widget
-function updateWeatherWidget(widget, newData) {
-    // Update the content of the widget based on new data
-	    if (!newData) {
-        // If no newData provided, generate dummy data
-        newData = {
-            temperature: '25°C',
-            icon: '10d',
-        };
+
+		        // Animate the width and position of existing widgets
+        appShelf.appendChild(wid);
+		
+		const widgets = document.querySelectorAll('.widget');
+
+        gsap.to(widgets, {
+            width: (index, target) => {
+                // Calculate the minimum width (25%)
+                const minWidth = '95%';
+                // Return the maximum between minWidth and the current width
+                return `calc(100% / ${appShelf.childElementCount})`;
+            }
+        });
+		
+		
+		
+		gsap.fromTo(wid, { x: '100%' }, { x: '0%', duration: .7, ease: 'power2.inOut'});
+        gsap.to(wid, {
+            opacity: 1,
+            duration: 0.2,
+            ease: 'power2.inOut',
+			
+        });
+		
+
+		
+		
+		
+		
+
     }
-	
-	widget = document.getElementById('weather');
-    widget.innerHTML = `
-		 <img src="https://openweathermap.org/img/wn/${newData.icon}@2x.png"> 
-		 ${newData.temperature}
-    `;
+}
+	 
+	 
+	 function fadeIsn(wid) {
+
+
+        appShelf.appendChild(wid);
+        gsap.set(wid, {
+            x: '100%'
+        });
+
+        gsap.to(wid, {
+            x: '0%',
+            duration: 0.7,
+            ease: 'power2.inOut'
+        });
+        gsap.to(wid, {
+            opacity: 1,
+            duration: 0.2,
+            ease: 'power2.inOut'
+        });
+
+        // Animate the width and position of existing widgets
+        gsap.to('.widget', {
+            width: (index, target) => {
+                // Calculate the minimum width (25%)
+                const minWidth = '95%';
+                // Return the maximum between minWidth and the current width
+                return `calc(100% / ${appShelf.childElementCount})`;
+            },
+			
+			
+			
+            x: (index, target) => {
+                // Calculate the position based on the number of widgets
+                return `calc(${index} * (100% / ${appShelf.childElementCount}))`;
+            },
+            duration: 0.5, // Adjust the duration as needed
+            ease: 'power2.out', // Optional easing function
+        });
+    
 }
 
 
 
+function fadeOut(wid){
+	
+gsap.to(wid, { opacity: 0, duration: 0.3});
+gsap.to(wid, {x: '-100%', duration: 0.5, ease: 'power2.inOut', onComplete: () => appShelf.removeChild(wid)});
+
+}
+
+
+function updateWeather(temp, url){
+            const appShelf = document.getElementById('appShelf');
+            const existingWeatherWidget = document.getElementById('weather');
+
+            // Fade out the existing weather widget
+            if (existingWeatherWidget) {
+fadeOutAndMoveLeft(existingWeatherWidget);
+				
+
+                
+
+               appendWidgetToAppShelf(WeatherWidget(temp, url));
+					
+            } else {
+                // If there's no existing weather widget, simply append the new one
+                appShelf.appendChild(newWidget);
+                fadeIn(newWidget);
+            }
+        }
 
 
 
 
 
-// Example usage
-const appShelf = document.getElementById('appShelf');
 
-// Fetch initial weather data and create a widget
-const initialWeatherData = fetchWeatherData();
-const weatherWidget = createWeatherWidget(initialWeatherData);
-const weatherWidget2 = createWeatherWidget(initialWeatherData);
-const weatherWidget3 = createWeatherWidget(initialWeatherData);
+        function appendWidgetToAppShelf(widget) {
+            const appShelf = document.getElementById('appShelf');
+            fadeIn(widget);
+		
+        }
+
+
+
+
+    // Fetch temperature data from the cache or API
+ const tempCache = JSON.parse(localStorage.getItem(cacheTemp));
+    
+ if (!tempCache || !tempCache.values || !tempCache.values.main) {
+     console.error('Error: No weather data in cache');
+  //  return null;
+   }
+
+    const tempData = tempCache.values;
+
+
+const weatherWidget = WeatherWidget(tempData.main.temp, tempData.weather[0].icon);
+const weatherWidget2 = WeatherWidget("32", "13d");
+
 
 // Append the widget to the app shelf
-appShelf.appendChild(weatherWidget);
-appShelf.appendChild(weatherWidget2);
-appShelf.appendChild(weatherWidget3);
+appendWidgetToAppShelf(weatherWidget);
+appendWidgetToAppShelf(weatherWidget2);
 
 // Periodically update the weather data and widget content
 setInterval(function () {
     const newWeatherData = fetchWeatherData();
 
     fetchTemperature();
-    updateWeatherWidget(weatherWidget, newWeatherData);
+appendWidgetToAppShelf(WeatherWidget("77", "09n"));
+	
 }, 15 * 60000); // Update every minute (adjust as needed)
+
 
 
 
 
 document.getElementById('updateButton').addEventListener('click', function () {
     // Simulate fetching new data
-    const newData = updateWeatherWidget();
+	
+	
+   //appendWidgetToAppShelf((WeatherWidget(tempData.main.temp, tempData.weather[0].icon)));
+appendWidgetToAppShelf(WeatherWidget("77", "09n"));
 
-    // Trigger the update animation
-    WidgetUpdateAnimation(newData);
 });
+
+        function fadeOutAndMoveLeft(element) {
+            gsap.to(element, {
+                opacity: 0,
+                x: -50, // Adjust the distance to move left
+                duration: 0.5,
+                onComplete: function () {
+                    element.remove();
+                    gsap.fromTo('.widget', { x: 50 }, { x: 0, duration: 0.5, stagger: 0.1 });
+                },
+            });
+        }
