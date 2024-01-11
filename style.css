@@ -62,23 +62,36 @@ html {
 	height: 8vh;
 	margin: 0 auto 0 auto;
 	align-items: center;
+	position:relative;
 }
 
 .widget {
 	height: 100%;
-	background-color: #ffffff;
-    transition: opacity 0.5s ease-in-out;
+    transition: width 0.3s ease;
 	opacity:0;
 	min-width: 25%;
-	width:auto;
+    display: flex;
+    justify-content: center;
 }
 
-#weather img {
+.widgetInner, .weatherwidgetInner {
+height: 100%;
+  background-color: #ffffff;
+  width: 10vw;
+  min-width: 40%;
+  transition: width 0.3s ease;
+}
+
+.widgetInner img {
+	width: 100%;
+}
+
+.weatherwidgetInner img {
 	height: 70%;
 }
 
-#weather {
-	display: flex;
+.weatherwidgetInner {
+  display: flex;
   justify-content: center;
   align-items: center;
   font-size: 110%;
