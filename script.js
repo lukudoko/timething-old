@@ -1,9 +1,23 @@
+const sunriseSunsetApiEndpoint = 'https://api.sunrise-sunset.org/json?lat=57.6529&lng=11.9106&formatted=0';
+const sunriseSunsetCacheKey = 'sunsetSunriseCache';
+const sunriseSunsetCacheExpiry = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+
+const temperatureApiEndpoint = 'https://api.openweathermap.org/data/2.5/weather?lat=57.65&lon=11.916&appid=7be8a9d34955926d889f6ce6d3ea87fb&units=metric';
+const temperatureCacheKey = 'currentTempCache';
+const temperatureCacheExpiry = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+
 $(document).ready(function () {
-    fetchSunriseSunset()
+    Promise.all([
+            fetchAndCacheData(sunriseSunsetApiEndpoint, sunriseSunsetCacheKey, sunriseSunsetCacheExpiry),
+            fetchAndCacheData(temperatureApiEndpoint, temperatureCacheKey, temperatureCacheExpiry)
+        ])
     .then(function () {
-        bgGradient();
+        generateBackgroundGradient();
         updateTime();
-fetchTemperature();
+
+        firstLoad();
+
         var initialBGposition = localStorage.getItem('latestBGPosition');
 
         if (initialBGposition !== null) {
@@ -11,27 +25,27 @@ fetchTemperature();
         }
 
         bgmove();
+
     })
     .catch(function (error) {
         console.error('Error fetching sunrise/sunset data:', error);
     });
 });
 
-const cacheKey = 'sunsetSunriseCache';
-const cacheExpiry = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
 
-function fetchSunriseSunset() {
+function fetchAndCacheData(apiEndpoint, cacheKey, cacheExpiry) {
     // Check if cached data is available
     const cachedData = JSON.parse(localStorage.getItem(cacheKey));
 
     // If cached data is available and not expired, use it
     if (cachedData && Date.now() - cachedData.timestamp < cacheExpiry) {
+        //console.log(`Using cached data for ${cacheKey}`);
         return Promise.resolve(cachedData.values);
     }
 
-    // Fetch new sunset and sunrise values from the API
-    return fetch('https://api.sunrise-sunset.org/json?lat=57.6529&lng=11.9106&formatted=0')
+    // Fetch new data from the API
+    return fetch(apiEndpoint)
     .then(response => response.json())
     .then(data => {
         // Cache the new values
@@ -41,19 +55,20 @@ function fetchSunriseSunset() {
         };
         localStorage.setItem(cacheKey, JSON.stringify(newData));
 
-        console.log('Fetched and cached new sunset and sunrise values:', newData.values);
+        console.log(`Fetched and cached new data for ${cacheKey}:`, newData.values);
 
         return newData.values;
     })
     .catch(error => {
-        console.error('Error fetching sunset and sunrise values:', error);
+        console.error(`Error fetching data for ${cacheKey}:`, error);
     });
-
 }
 
-function dayPercents() {
+
+
+function generateBackgroundGradient() {
     // Fetch sunset and sunrise values from the cache
-    const sunCache = JSON.parse(localStorage.getItem(cacheKey));
+    const sunCache = JSON.parse(localStorage.getItem(sunriseSunsetCacheKey));
 
     if (!sunCache || !sunCache.values || !sunCache.values.results) {
         console.error('Error: Sunset and sunrise data not available in the cache.');
@@ -82,31 +97,23 @@ function dayPercents() {
         return parseFloat(((minutesSinceMidnight / totalDayDurationMinutes) * 100).toFixed(1));
     });
 
-    return percentagesArray;
-}
+    // Adjust percentages as needed
+    percentagesArray[0] = parseFloat((percentagesArray[0] - 3).toFixed(1));
+    percentagesArray[4] += 3;
 
-function bgGradient() {
+    percentagesArray.push(percentagesArray[2] + 5);
+    percentagesArray.sort((a, b) => a - b);
 
-    const percentages = dayPercents();
-    percentages[0] = parseFloat((percentages[0] - 3).toFixed(1));
-    percentages[4] += 3;
-
-    percentages.push(percentages[2] + 5);
-    percentages.sort(function (a, b) {
-        return a - b
-    });
-
-    const colours = ['#0E0430', '#f1aa7f', '#88e3ff', '#88e3ff', '#FFA8A9', '#0E0430']
+    const colours = ['#0E0430', '#f1aa7f', '#88e3ff', '#88e3ff', '#FFA8A9', '#0E0430'];
 
     function combineArrays(colors, percentages) {
-
         return colors.map((color, index) => ({
                 color: color,
                 percentage: percentages[index],
             }));
     }
 
-    const combinedArray = combineArrays(colours, percentages);
+    const combinedArray = combineArrays(colours, percentagesArray);
 
     function generateGradientString(combinedArray) {
         const gradientStops = combinedArray.map(item => `${item.color} ${item.percentage}%`);
@@ -116,14 +123,15 @@ function bgGradient() {
 
     const gradientString = generateGradientString(combinedArray);
 
+    // Apply the gradient to the background
     $('#background').css('background', gradientString);
 }
+
 
 function updateTime() {
     var now = new Date();
     var hours = now.getHours() % 12 || 12;
-	var hours24 = now.getHours();
-	console.log(hours);
+    var hours24 = now.getHours();
     var minutes = now.getMinutes();
     var ampm = hours24 >= 12 ? 'pm' : 'am';
 

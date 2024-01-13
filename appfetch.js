@@ -1,42 +1,4 @@
-// Example function to fetch weather data
-
-const cacheTemp = 'currentTempCache';
-const cacheTempExpiry = 15 * 60 * 1000; // 30 mins in milliseconds
 const appShelf = document.getElementById('appShelf');
-
-
-function fetchTemperature() {
-    // Check if cached data is available
-    const cachedData = JSON.parse(localStorage.getItem(cacheTemp));
-
-    // If cached data is available and not expired, use it
-    if (cachedData && Date.now() - cachedData.timestamp < cacheTempExpiry) {
-		console.log("using cache");
-        return Promise.resolve(cachedData.values);
-    }
-
-    // Fetch new Temp
-    return fetch('https://api.openweathermap.org/data/2.5/weather?lat=57.65&lon=11.916&appid=7be8a9d34955926d889f6ce6d3ea87fb&units=metric')
-    .then(response => response.json())
-    .then(data => {
-        // Cache the new values
-        const newData = {
-            values: data,
-            timestamp: Date.now(),
-        };
-        localStorage.setItem(cacheTemp, JSON.stringify(newData));
-		
-        console.log('Fetched and cached current temp data:', newData.values);
-
-        return newData.values;
-    })
-    .catch(error => {
-        console.error('Error fetching temp???:', error);
-    });
-
-}
-
-
 
 
 // Function to create a weather widget
@@ -226,54 +188,61 @@ function appendWidgetToAppShelf(widget) {
 
 
 
-
+function firstLoad() {
     // Fetch temperature data from the cache or API
- const tempCache = JSON.parse(localStorage.getItem(cacheTemp));
-    
- if (!tempCache || !tempCache.values || !tempCache.values.main) {
-     console.error('Error: No weather data in cache');
-  //  return null;
-   }
+    const tempCache = JSON.parse(localStorage.getItem(temperatureCacheKey));
 
-const tempData = tempCache.values;
-const weatherWidget = WeatherWidget(tempData.main.temp, tempData.weather[0].icon);
-const weatherWidget2 = WeatherWidget("32", "13d");
-const nu = newWidget();
+    if (!tempCache || !tempCache.values || !tempCache.values.main) {
+        console.error('Error: No weather data in cache');
+        return null;
+    }
 
-// Append the widget to the app shelf
-//appendWidgetToAppShelf(weatherWidget);
-appendWidgetToAppShelf(weatherWidget2);
-  appendWidgetToAppShelf(newWidget());
+    const tempData = tempCache.values;
 
-// Periodically update the weather data and widget content
-let previousTemperature = null;
-let previousIcon = null;
+    const weatherWidget = WeatherWidget(tempData.main.temp, tempData.weather[0].icon);
+    const nu = newWidget();
 
-setInterval(function () {
-    fetchTemperature()
+    // Append the widget to the app shelf
+
+    appendWidgetToAppShelf(weatherWidget);
+    appendWidgetToAppShelf(newWidget());
+    appendWidgetToAppShelf(newWidget());
+}
+
+
+
+Promise.all([
+        fetchAndCacheData(temperatureApiEndpoint, temperatureCacheKey, temperatureCacheExpiry)
+    ]).then(function () {
+    // Periodically update the weather data and widget content
+
+
+    const tempsCache = JSON.parse(localStorage.getItem(temperatureCacheKey));
+    let previousTemperature = tempsCache.values.main.temp;
+    let previousIcon = tempsCache.values.weather[0].icon;
+
+    function checkUp() {
+        fetchAndCacheData(temperatureApiEndpoint, temperatureCacheKey, temperatureCacheExpiry)
         .then((tempData) => {
             // Check if the values have changed
             if (
                 tempData.main.temp !== previousTemperature ||
-                tempData.weather[0].icon !== previousIcon
-            ) {
+                tempData.weather[0].icon !== previousIcon) {
                 // Update the widget only if values have changed
                 updateWeather(tempData.main.temp, tempData.weather[0].icon);
 
                 // Update previous values
                 previousTemperature = tempData.main.temp;
                 previousIcon = tempData.weather[0].icon;
-            } else {
-                console.log('Widget not updated. Values have not changed.');
             }
         })
         .catch((error) => {
             console.error('Error fetching temperature:', error);
         });
-}, 15 * 600);
+    };
 
-
-
+    setInterval(checkUp, 15 * 600);
+});
 
 
 document.getElementById('updateButton').addEventListener('click', function () {
