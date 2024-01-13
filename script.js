@@ -3,7 +3,7 @@ $(document).ready(function () {
     .then(function () {
         bgGradient();
         updateTime();
-
+fetchTemperature();
         var initialBGposition = localStorage.getItem('latestBGPosition');
 
         if (initialBGposition !== null) {

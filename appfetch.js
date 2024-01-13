@@ -1,7 +1,7 @@
 // Example function to fetch weather data
 
 const cacheTemp = 'currentTempCache';
-const cacheTempExpiry = 30 * 60 * 1000; // 30 mins in milliseconds
+const cacheTempExpiry = 15 * 60 * 1000; // 30 mins in milliseconds
 const appShelf = document.getElementById('appShelf');
 
 
@@ -26,9 +26,6 @@ function fetchTemperature() {
         };
         localStorage.setItem(cacheTemp, JSON.stringify(newData));
 		
-		
-		
-
         console.log('Fetched and cached current temp data:', newData.values);
 
         return newData.values;
@@ -39,7 +36,7 @@ function fetchTemperature() {
 
 }
 
-fetchTemperature()
+
 
 
 // Function to create a weather widget
@@ -137,8 +134,6 @@ function fadeIn(wid) {
     }
 }
 
-
-
 function fadeOut(wid, newWid) {
 
     const widgets = document.querySelectorAll('.widget');
@@ -202,12 +197,6 @@ function fadeOut(wid, newWid) {
             },
         });
 
-
-
-
-
-
-
     }
 
 }
@@ -230,15 +219,10 @@ function updateWeather(temp, url) {
     }
 }
 
+function appendWidgetToAppShelf(widget) {
+    fadeIn(widget);
 
-
-
-
-
-        function appendWidgetToAppShelf(widget) {
-            fadeIn(widget);
-		
-        }
+}
 
 
 
@@ -251,9 +235,7 @@ function updateWeather(temp, url) {
   //  return null;
    }
 
-    const tempData = tempCache.values;
-
-
+const tempData = tempCache.values;
 const weatherWidget = WeatherWidget(tempData.main.temp, tempData.weather[0].icon);
 const weatherWidget2 = WeatherWidget("32", "13d");
 const nu = newWidget();
@@ -264,13 +246,31 @@ appendWidgetToAppShelf(weatherWidget2);
   appendWidgetToAppShelf(newWidget());
 
 // Periodically update the weather data and widget content
-setInterval(function () {
-    
+let previousTemperature = null;
+let previousIcon = null;
 
-    fetchTemperature();
-	updateWeather(tempData.main.temp, tempData.weather[0].icon);
-	
-}, 15 * 600); // Update every 15 mins
+setInterval(function () {
+    fetchTemperature()
+        .then((tempData) => {
+            // Check if the values have changed
+            if (
+                tempData.main.temp !== previousTemperature ||
+                tempData.weather[0].icon !== previousIcon
+            ) {
+                // Update the widget only if values have changed
+                updateWeather(tempData.main.temp, tempData.weather[0].icon);
+
+                // Update previous values
+                previousTemperature = tempData.main.temp;
+                previousIcon = tempData.weather[0].icon;
+            } else {
+                console.log('Widget not updated. Values have not changed.');
+            }
+        })
+        .catch((error) => {
+            console.error('Error fetching temperature:', error);
+        });
+}, 15 * 600);
 
 
 
